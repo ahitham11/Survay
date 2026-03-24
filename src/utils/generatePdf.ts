@@ -253,7 +253,6 @@ surveyorName?: string)
       windowWidth: 860
     });
 
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -262,22 +261,40 @@ surveyorName?: string)
 
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = pdfWidth - 20; // 10mm margins
-    const imgHeight = canvas.height * imgWidth / canvas.width;
+    const margin = 10;
+    const usableWidth = pdfWidth - margin * 2;
+    const usableHeight = pdfHeight - margin * 2;
 
-    let heightLeft = imgHeight;
-    let position = 10; // top margin
+    // Calculate how many pixels of the canvas fit on one page
+    const scale = usableWidth / canvas.width;
+    const pageHeightInCanvasPx = Math.floor(usableHeight / scale);
 
-    // First page
-    pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
-    heightLeft -= pdfHeight - 20;
+    let yOffset = 0;
+    let pageIndex = 0;
 
-    // Additional pages
-    while (heightLeft > 0) {
-      position = -(pdfHeight - 20) + position + 10;
-      pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight - 20;
+    while (yOffset < canvas.height) {
+      const sliceHeight = Math.min(pageHeightInCanvasPx, canvas.height - yOffset);
+
+      // Create a canvas slice for this page
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = sliceHeight;
+      const ctx = pageCanvas.getContext('2d')!;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+      ctx.drawImage(canvas, 0, yOffset, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+
+      const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
+      const imgHeightMm = sliceHeight * scale;
+
+      if (pageIndex > 0) {
+        pdf.addPage();
+      }
+
+      pdf.addImage(pageImgData, 'JPEG', margin, margin, usableWidth, imgHeightMm);
+
+      yOffset += sliceHeight;
+      pageIndex++;
     }
 
     pdf.save('تقرير-الاستبيان-الإداري.pdf');
