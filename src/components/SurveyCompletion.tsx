@@ -213,7 +213,7 @@ export function SurveyCompletion({
         <div className="flex items-center gap-2 sm:gap-3 text-green-500 bg-green-500/10 px-4 sm:px-6 py-3 sm:py-4 rounded-xl border border-green-500/20">
             <ShieldCheckIcon className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
             <span className="font-medium text-sm sm:text-base">
-              تم إرسال جميع التقييمات بسرية تامة
+              حمّل ملف الـ PDF وأرسله إلى السكرتارية
             </span>
           </div>
         }
